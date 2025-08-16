@@ -6,12 +6,12 @@ import { getFirestore } from "firebase/firestore";
 
 // ▼▼▼ フェーズ1でメモした、あなたの「合言葉」をここに貼り付け ▼▼▼
 const firebaseConfig = {
-  apiKey: "AIzaSyChWxqFZokGuB4wgbuQ2J9iZGrvP2v1vSs",
-  authDomain: "neighbor-link-6591c.firebaseapp.com",
-  projectId: "neighbor-link-6591c",
-  storageBucket: "neighbor-link-6591c.firebasestorage.app",
-  messagingSenderId: "237938901818",
-  appId: "1:237938901818:web:bba796d44e7e13ed350603"
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID
 };
 // ▲▲▲ フェーズ1でメモした、あなたの「合言葉」をここに貼り付け ▲▲▲
 
