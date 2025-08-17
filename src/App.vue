@@ -29,6 +29,7 @@ const handleSignOut = () => {
       <!-- ログインしている時のメニュー -->
       <template v-if="isLoggedIn">
         <RouterLink to="/events">イベント一覧</RouterLink>
+        <RouterLink to="/create-event">イベントを作成</RouterLink>
         <RouterLink to="/mypage">マイページ</RouterLink>
         <RouterLink to="/profile">プロフィール編集</RouterLink>
         <button @click="handleSignOut" class="logout-button">ログアウト</button>

@@ -1,0 +1,81 @@
+<!-- src/components/CreateEvent.vue -->
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { db, auth } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+const router = useRouter();
+const title = ref('');
+const description = ref('');
+const location = ref('');
+const eventDate = ref('');
+
+const handleCreateEvent = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert('イベントを作成するにはログインが必要です。');
+    return;
+  }
+
+  // フォームが空でないか簡単なチェック
+  if (!title.value || !description.value || !location.value || !eventDate.value) {
+    alert('すべての項目を入力してください。');
+    return;
+  }
+
+  try {
+    // 'events'コレクションに新しいドキュメントを追加
+    await addDoc(collection(db, "events"), {
+      title: title.value,
+      description: description.value,
+      location: location.value,
+      eventDate: eventDate.value,
+      creatorId: user.uid, // ★★★ これが「誰が作ったか」を記録する重要な情報！
+      createdAt: serverTimestamp() // 作成日時
+    });
+
+    alert('新しいイベントを作成しました！');
+    router.push('/events'); // 作成後、イベント一覧に移動
+
+  } catch (error) {
+    console.error("イベント作成エラー: ", error);
+    alert('エラーが発生しました。');
+  }
+};
+</script>
+
+<template>
+  <div class="card">
+    <h2>新しいイベントを作成する</h2>
+    <form @submit.prevent="handleCreateEvent">
+      <div class="form-group">
+        <label for="title">イベント名</label>
+        <input type="text" id="title" v-model="title" required />
+      </div>
+      <div class="form-group">
+        <label for="description">イベント詳細</label>
+        <textarea id="description" v-model="description" rows="5" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="location">開催場所</label>
+        <input type="text" id="location" v-model="location" required />
+      </div>
+      <div class="form-group">
+        <label for="eventDate">開催日時</label>
+        <!-- 日付と時間を簡単に入力できるtypeを使用 -->
+        <input type="datetime-local" id="eventDate" v-model="eventDate" required />
+      </div>
+      <button type="submit">作成する</button>
+    </form>
+  </div>
+</template>
+
+<style scoped>
+/* 他のフォームとデザインを統一 */
+.card { max-width: 600px; margin: 2rem auto; padding: 2rem; border: 1px solid #ddd; border-radius: 8px; }
+.form-group { margin-bottom: 1rem; }
+label { display: block; margin-bottom: 0.5rem; }
+input, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; }
+button { width: 100%; padding: 0.75rem; background-color: #42b983; color: white; border: none; border-radius: 4px; cursor: pointer; }
+</style>
