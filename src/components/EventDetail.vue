@@ -2,11 +2,34 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const route = useRoute(); // URLの情報を取得するための道具
 const event = ref(null); // 取得した単一のイベントを保存する「箱」
+const eventId = route.params.id; // eventIdをここで定義しておくと便利
+
+// 「参加する」ボタンが押されたときの処理
+const handleAttend = async () => {
+  const user = auth.currentUser; // 現在ログインしているユーザーを取得
+  if (!user) {
+    alert('参加するにはログインが必要です。');
+    return;
+  }
+
+  try {
+    // 'attendances'コレクションに新しいドキュメント（参加記録）を追加
+    await addDoc(collection(db, "attendances"), {
+      userId: user.uid,         // 誰が
+      eventId: eventId,         // どのイベントに
+      createdAt: serverTimestamp() // いつ参加したか
+    });
+    alert('イベントへの参加登録が完了しました！');
+  } catch (error) {
+    console.error("参加登録エラー: ", error);
+    alert('エラーが発生しました。');
+  }
+};
 
 onMounted(async () => {
   // URLからイベントのIDを取得 (例: /event/ABCDEFG -> ABCDEFG)
@@ -23,6 +46,7 @@ onMounted(async () => {
     console.log("No such document!");
   }
 });
+
 </script>
 
 <template>
@@ -33,6 +57,7 @@ onMounted(async () => {
     <p><strong>場所:</strong> {{ event.location }}</p>
     <hr />
     <p>{{ event.description }}</p>
+    <button @click="handleAttend">このイベントに参加する</button>
   </div>
   <div v-else>
     <p>イベントを読み込んでいます...</p>

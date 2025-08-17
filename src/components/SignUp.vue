@@ -15,7 +15,7 @@ const handleSignUp = () => {
       // 登録成功！
       console.log('登録に成功しました！', userCredential.user);
       alert('アカウント登録が完了しました！');
-      router.push('/profile'); // ← alertの代わりにこれを追加（またはalertの後に）
+      router.push('/events'); //新規登録直後に、イベント一覧が見える
     })
     .catch((error) => {
       // 登録失敗…
