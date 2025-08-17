@@ -2,12 +2,19 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { db, auth } from '../firebase';
+import { db } from '../firebase';
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const route = useRoute(); // URLの情報を取得するための道具
 const event = ref(null); // 取得した単一のイベントを保存する「箱」
 const eventId = route.params.id; // eventIdをここで定義しておくと便利
+const isLoggedIn = ref(false); // ← ログイン状態を入れる箱
+const auth = getAuth();
+
+onAuthStateChanged(auth, (user) => { // ← ログイン状態を監視
+  isLoggedIn.value = !!user;
+});
 
 // 「参加する」ボタンが押されたときの処理
 const handleAttend = async () => {
@@ -57,7 +64,8 @@ onMounted(async () => {
     <p><strong>場所:</strong> {{ event.location }}</p>
     <hr />
     <p>{{ event.description }}</p>
-    <button @click="handleAttend">このイベントに参加する</button>
+    <!-- v-if を追加。isLoggedInがtrueの時だけこのボタンを表示 -->
+    <button v-if="isLoggedIn" @click="handleAttend">このイベントに参加する</button>
   </div>
   <div v-else>
     <p>イベントを読み込んでいます...</p>

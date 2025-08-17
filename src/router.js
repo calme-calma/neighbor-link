@@ -14,8 +14,8 @@ const routes = [
   { path: '/signup', component: SignUp },
   { path: '/', redirect: '/events' },
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
-  { path: '/events', component: EventsList, meta: { requiresAuth: true } },
-  { path: '/event/:id', component: EventDetail, meta: { requiresAuth: true } },
+  { path: '/events', component: EventsList },
+  { path: '/event/:id', component: EventDetail },
   { path: '/mypage', component: MyPage, meta: { requiresAuth: true } },
 ];
 

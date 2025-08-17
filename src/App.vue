@@ -22,15 +22,22 @@ const handleSignOut = () => {
 };
 </script>
 
+<!-- src/App.vue の <template> の中身を上書き -->
 <template>
   <header>
     <nav>
-      <!-- ログインしている時だけ表示するリンク -->
+      <!-- ログインしている時のメニュー -->
       <template v-if="isLoggedIn">
         <RouterLink to="/events">イベント一覧</RouterLink>
         <RouterLink to="/mypage">マイページ</RouterLink>
         <RouterLink to="/profile">プロフィール編集</RouterLink>
         <button @click="handleSignOut" class="logout-button">ログアウト</button>
+      </template>
+      <!-- ログインしていない時のメニュー -->
+      <template v-else>
+        <RouterLink to="/events">イベント一覧</RouterLink>
+        <RouterLink to="/login">ログイン</RouterLink>
+        <RouterLink to="/signup">新規登録</RouterLink>
       </template>
     </nav>
   </header>
