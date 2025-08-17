@@ -74,14 +74,15 @@ const handleAttend = async () => {
     <hr />
     <p>{{ event.description }}</p>
     <div v-if="creatorProfile" class="creator-profile">
-      <h3>主催者情報</h3>
-      <p><strong>名前:</strong> {{ creatorProfile.nickname || '未設定' }}</p>
-      <p><strong>年齢:</strong> {{ creatorProfile.age || '未設定' }}</p>
-      <p><strong>性別:</strong> {{ creatorProfile.gender || '未設定' }}</p>
-      <p><strong>仕事:</strong> {{ creatorProfile.occupation || '未設定' }}</p>
+      <h3>主催者: {{ creatorProfile.nickname || creatorProfile.name }}</h3>
+      <p><strong>最寄り駅:</strong> {{ creatorProfile.station || '未設定' }}</p>
       <p><strong>休日:</strong> {{ creatorProfile.holiday || '未設定' }}</p>
-      <p><strong>趣味:</strong> {{ creatorProfile.hobbies || '未設定' }}</p>
-      <p><strong>自己紹介:</strong> {{ creatorProfile.introduction || '未設定' }}</p>
+      <!-- interestsが配列で存在する場合のみ、カンマ区切りの文字列にして表示 -->
+      <p v-if="creatorProfile.interests && creatorProfile.interests.length > 0">
+        <strong>興味のあること:</strong> {{ creatorProfile.interests.join(', ') }}
+      </p>
+      <hr>
+      <p>{{ creatorProfile.introduction || '自己紹介は未設定です。' }}</p>
     </div>
     <!-- v-if を追加。isLoggedInがtrueの時だけこのボタンを表示 -->
     <button v-if="isLoggedIn" @click="handleAttend" class="button-primary">このイベントに参加する</button>
