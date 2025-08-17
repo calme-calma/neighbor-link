@@ -31,10 +31,11 @@ onMounted(async () => {
     <h2>マイページ（参加予定のイベント）</h2>
     <div v-if="attendingEvents.length > 0">
       <ul>
-        <li v-for="event in attendingEvents" :key="event.id">
+        <li v-for="event in attendingEvents" :key="event.id" class="event-card">
           <RouterLink :to="'/event/' + event.id">
             <h3>{{ event.title }}</h3>
             <p>{{ event.eventDate }}</p>
+            <p>📍 {{ event.location }}</p>
           </RouterLink>
         </li>
       </ul>
@@ -46,10 +47,61 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* EventsList.vueのスタイルを参考にしています */
-.my-page { max-width: 800px; margin: 2rem auto; }
-ul { list-style: none; padding: 0; }
-li { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; padding: 1rem; }
-li a { text-decoration: none; color: inherit; }
-h3 { margin-top: 0; }
+.events-list {
+  max-width: 1200px; /* PC表示を考慮して、最大幅を広げる */
+  margin: 2rem auto;
+  padding: 0 1rem; /* スマホ表示で左右に余白を */
+}
+
+/* カードを横に並べるためのグリッドコンテナ */
+ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr; /* スマホでは縦1列が基本 */
+  gap: 1.5rem; /* カード間の余白 */
+}
+
+/* イベントカード本体のスタイル */
+.event-card {
+  background-color: white;
+  border-radius: 16px; /* 角を大きく丸める */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 浮き上がって見える影 */
+  overflow: hidden; /* 角丸からはみ出す要素を隠す */
+  transition: transform 0.2s, box-shadow 0.2s; /* アニメーションの設定 */
+}
+
+/* マウスを乗せると少し浮き上がるエフェクト */
+.event-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.event-card a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 1.5rem; /* カード内の余白 */
+}
+
+h3 {
+  margin-top: 0;
+  color: var(--primary-color); /* タイトルの色をメインカラーに */
+}
+
+/* ★★★ ここからがレスポンシブ対応 ★★★ */
+
+/* 画面幅が768px以上（タブレット）になったら */
+@media (min-width: 768px) {
+  ul {
+    grid-template-columns: repeat(2, 1fr); /* カードを横2列に */
+  }
+}
+
+/* 画面幅が1024px以上（PC）になったら */
+@media (min-width: 1024px) {
+  ul {
+    grid-template-columns: repeat(3, 1fr); /* カードを横3列に */
+  }
+}
 </style>
