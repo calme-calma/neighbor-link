@@ -64,10 +64,11 @@ input {
 button {
   width: 100%;
   padding: 0.75rem;
-  background-color: #42b983;
-  color: white;
+  background-color: var(--accent-color); /* ← 黄色に変更 */
+  color: var(--text-color);           /* ← ダークグレーに変更 */
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 700;                   /* ← 太字を追記 */
 }
 </style>

@@ -48,10 +48,54 @@ const handleSignOut = () => {
 </template>
 
 <style>
-/* 全体に適用される基本スタイル */
-body { font-family: sans-serif; margin: 0; }
-main { padding: 1rem; }
-header { background-color: #f8f8f8; padding: 1rem; border-bottom: 1px solid #ddd; }
-nav a { margin-right: 1rem; text-decoration: none; color: #42b983; }
-.logout-button { background: none; border: none; color: #42b983; cursor: pointer; padding: 0; margin-left: 1rem; }
+/* === Google Fonts のインポート === */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
+/* === カラー変数の定義 === */
+:root {
+  --primary-color: #2596be;   /* メインの青 */
+  --accent-color: #ffc700;    /* アクセントの黄 */
+  --text-color: #333333;      /* 基本テキスト色 */
+  --background-color: #ffffff; /* 基本背景色 */
+  --light-gray: #f5f5f5;      /* 薄いグレー */
+}
+
+/* === 全体的なスタイルのリセットと基本設定 === */
+body {
+  margin: 0;
+  font-family: 'Noto Sans JP', sans-serif; /* ★フォントを適用！ */
+  background-color: var(--background-color); /* ★背景色を適用！ */
+  color: var(--text-color); /* ★基本文字色を適用！ */
+}
+
+main {
+  padding: 1rem;
+}
+
+/* === ヘッダー（ナビゲーションバー）のスタイル === */
+header {
+  background-color: var(--background-color);
+  padding: 1rem;
+  border-bottom: 1px solid var(--light-gray);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 少し影をつける */
+}
+
+nav a {
+  margin-right: 1.5rem;
+  text-decoration: none;
+  color: var(--primary-color); /* ★リンクの色を適用！ */
+  font-weight: 700; /* 少し太字に */
+}
+
+.logout-button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 1.5rem;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif; /* ボタンにもフォント適用 */
+  font-size: 1em; /* 周りの文字と同じサイズに */
+}
 </style>
