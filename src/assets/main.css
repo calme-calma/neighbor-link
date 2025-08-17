@@ -1,35 +1,55 @@
-@import './base.css';
+/* src/assets/main.css */
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
+/* === 汎用カードスタイル === */
+/* ログイン画面やプロフィール画面で使われる、白い背景のカード */
+.card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   padding: 2rem;
-  font-weight: normal;
+  max-width: 600px;
+  margin: 2rem auto;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* === 汎用フォームスタイル === */
+/* 入力欄とそのラベルをまとめるグループ */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+/* 「メールアドレス」などのラベル */
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+/* 全ての入力欄（テキスト、テキストエリア、選択ボックス） */
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box; /* paddingやborderが幅に影響しないようにするおまじない */
+  font-family: 'Noto Sans JP', sans-serif; /* 入力される文字にもフォントを適用 */
+  font-size: 1em;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+/* === 汎用ボタンスタイル === */
+/* アプリ内の主要なボタン（ログイン、保存する、作成するなど） */
+.button-primary {
+  width: 100%;
+  padding: 0.85rem;
+  background-color: var(--primary-color); /* ブランドカラーの青に！ */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1em;
+  transition: background-color 0.2s; /* 色が滑らかに変わるアニメーション */
 }
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+/* マウスを乗せた時に少し濃い青にする */
+.button-primary:hover {
+  background-color: #1e7a9e; 
 }

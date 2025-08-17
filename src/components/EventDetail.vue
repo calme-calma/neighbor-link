@@ -84,7 +84,7 @@ const handleAttend = async () => {
       <p><strong>自己紹介:</strong> {{ creatorProfile.introduction || '未設定' }}</p>
     </div>
     <!-- v-if を追加。isLoggedInがtrueの時だけこのボタンを表示 -->
-    <button v-if="isLoggedIn" @click="handleAttend">このイベントに参加する</button>
+    <button v-if="isLoggedIn" @click="handleAttend" class="button-primary">このイベントに参加する</button>
   </div>
   <div v-else>
     <p>イベントを読み込んでいます...</p>

@@ -3,6 +3,7 @@
 import { ref } from 'vue';
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import logo from './assets/symbol-logo.png';
 
 const isLoggedIn = ref(false);
 const router = useRouter();
@@ -25,22 +26,28 @@ const handleSignOut = () => {
 <!-- src/App.vue の <template> の中身を上書き -->
 <template>
   <header>
-    <nav>
-      <!-- ログインしている時のメニュー -->
-      <template v-if="isLoggedIn">
-        <RouterLink to="/events">イベント一覧</RouterLink>
-        <RouterLink to="/create-event">イベントを作成</RouterLink>
-        <RouterLink to="/mypage">マイページ</RouterLink>
-        <RouterLink to="/profile">プロフィール編集</RouterLink>
-        <button @click="handleSignOut" class="logout-button">ログアウト</button>
-      </template>
-      <!-- ログインしていない時のメニュー -->
-      <template v-else>
-        <RouterLink to="/events">イベント一覧</RouterLink>
-        <RouterLink to="/login">ログイン</RouterLink>
-        <RouterLink to="/signup">新規登録</RouterLink>
-      </template>
-    </nav>
+    <div class="nav-container">
+      <RouterLink to="/events" class="brand-identity">
+        <img :src="logo" alt="Neighbor Link Symbol" class="symbol-logo" />
+        <span class="service-name">Neighbor Link</span>
+      </RouterLink>
+      <nav>
+        <!-- ログインしている時のメニュー -->
+        <template v-if="isLoggedIn">
+          <RouterLink to="/events">イベント一覧</RouterLink>
+          <RouterLink to="/create-event">イベントを作成</RouterLink>
+          <RouterLink to="/mypage">マイページ</RouterLink>
+          <RouterLink to="/profile">プロフィール編集</RouterLink>
+          <button @click="handleSignOut" class="logout-button">ログアウト</button>
+        </template>
+        <!-- ログインしていない時のメニュー -->
+        <template v-else>
+          <RouterLink to="/events">イベント一覧</RouterLink>
+          <RouterLink to="/login">ログイン</RouterLink>
+          <RouterLink to="/signup">新規登録</RouterLink>
+        </template>
+      </nav>
+    </div>
   </header>
   <main>
     <RouterView />
@@ -75,27 +82,46 @@ main {
 /* === ヘッダー（ナビゲーションバー）のスタイル === */
 header {
   background-color: var(--background-color);
-  padding: 1rem;
+  padding: 0.75rem 1rem; /* 上下の余白を少し調整 */
   border-bottom: 1px solid var(--light-gray);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 少し影をつける */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-identity {
+  display: flex;
+  align-items: center;
+  text-decoration: none; /* リンクの下線を消す */
+}
+
+.symbol-logo {
+  height: 32px; /* ★ロゴの高さを少し小さめに調整 */
+  width: auto;
+  margin-right: 0.75rem; /* ロゴと文字の間の余白 */
+}
+
+.service-name {
+  font-size: 1.25rem; /* 文字サイズを少し大きく */
+  font-weight: 700; /* 太字に */
+  color: var(--text-color); /* 文字色を指定 */
 }
 
 nav a {
-  margin-right: 1.5rem;
-  text-decoration: none;
-  color: var(--primary-color); /* ★リンクの色を適用！ */
-  font-weight: 700; /* 少し太字に */
-}
-
-.logout-button {
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  cursor: pointer;
-  padding: 0;
   margin-left: 1.5rem;
+  text-decoration: none;
+  color: var(--text-color);
   font-weight: 700;
-  font-family: 'Noto Sans JP', sans-serif; /* ボタンにもフォント適用 */
-  font-size: 1em; /* 周りの文字と同じサイズに */
+  transition: color 0.2s;
 }
+nav a:hover {
+  color: var(--primary-color);
+}
+.logout-button { /* 変更なし */ }
 </style>

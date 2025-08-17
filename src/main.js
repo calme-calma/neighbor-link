@@ -1,3 +1,5 @@
+import './assets/main.css';
+
 import './firebase';
 import './assets/main.css'
 
