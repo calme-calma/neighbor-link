@@ -66,26 +66,35 @@ const handleAttend = async () => {
 </script>
 
 <template>
-  <!-- eventの箱にデータが入ってから表示する -->
-  <div v-if="event" class="event-detail">
-    <h1>{{ event.title }}</h1>
-    <p><strong>日時:</strong> {{ event.eventDate }}</p>
-    <p><strong>場所:</strong> {{ event.location }}</p>
-    <hr />
-    <p>{{ event.description }}</p>
-    <div v-if="creatorProfile" class="creator-profile">
-      <h3>主催者: {{ creatorProfile.nickname || creatorProfile.name }}</h3>
-      <p><strong>最寄り駅:</strong> {{ creatorProfile.station || '未設定' }}</p>
-      <p><strong>休日:</strong> {{ creatorProfile.holiday || '未設定' }}</p>
-      <!-- interestsが配列で存在する場合のみ、カンマ区切りの文字列にして表示 -->
-      <p v-if="creatorProfile.interests && creatorProfile.interests.length > 0">
-        <strong>興味のあること:</strong> {{ creatorProfile.interests.join(', ') }}
-      </p>
-      <hr>
-      <p>{{ creatorProfile.introduction || '自己紹介は未設定です。' }}</p>
+  <div v-if="event" class="event-detail-container">
+    <!-- メイン写真エリア（プレースホルダー） -->
+    <div class="main-image"></div>
+
+    <div class="content-wrapper">
+      <h1 class="heading-main">{{ event.title }}</h1>
+
+      <!-- アイコン付き基本情報 -->
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="icon">🗓️</span>
+          <span>{{ event.eventDate }}</span>
+        </div>
+        <div class="info-item">
+          <span class="icon">📍</span>
+          <span>{{ event.location }}</span>
+        </div>
+      </div>
+      
+      <hr />
+      <p class="description">{{ event.description }}</p>
     </div>
-    <!-- v-if を追加。isLoggedInがtrueの時だけこのボタンを表示 -->
-    <button v-if="isLoggedIn" @click="handleAttend" class="button-primary">このイベントに参加する</button>
+
+    <!-- フローティング参加ボタン -->
+    <div class="floating-footer">
+      <button v-if="isLoggedIn" @click="handleAttend" class="button button-primary">このイベントに参加する</button>
+      <RouterLink v-else to="/login" class="button button-primary">参加するにはログイン</RouterLink>
+    </div>
+
   </div>
   <div v-else>
     <p>イベントを読み込んでいます...</p>
@@ -93,12 +102,51 @@ const handleAttend = async () => {
 </template>
 
 <style scoped>
-.event-detail { max-width: 800px; margin: 2rem auto; }
-hr { margin: 1rem 0; }
-.creator-profile {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+.event-detail-container {
+  padding-bottom: 100px; /* フローティングボタンの高さ分、余白を確保 */
+}
+.main-image {
+  width: 100%;
+  height: 40vh; /* 画面の高さの40% */
+  background-color: var(--color-secondary);
+}
+.content-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+.info-grid {
+  display: flex;
+  gap: 2rem;
+  margin: 1.5rem 0;
+  font-size: 1.1rem;
+}
+.info-item {
+  display: flex;
+  align-items: center;
+}
+.icon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+}
+hr { margin: 2rem 0; border-color: var(--color-border); }
+.description { line-height: 1.8; }
+
+/* フローティングフッターのスタイル */
+.floating-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  padding: 1rem 2rem;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+.floating-footer .button {
+  width: 100%;
+  max-width: 400px;
 }
 </style>
