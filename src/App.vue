@@ -8,6 +8,7 @@ import logo from './assets/symbol-logo.png';
 const isLoggedIn = ref(false);
 const router = useRouter();
 const auth = getAuth();
+const isMenuOpen = ref(false); // ★★★ ハンバーガーメニュー用のスイッチを追加 ★★★
 
 // ユーザーのログイン状態を監視し、isLoggedInの値を更新する
 onAuthStateChanged(auth, (user) => {
@@ -31,20 +32,26 @@ const handleSignOut = () => {
         <img :src="logo" alt="Neighbor Link Symbol" class="symbol-logo" />
         <span class="service-name">Neighbor Link</span>
       </RouterLink>
-      <nav>
+
+      <button @click="isMenuOpen = !isMenuOpen" class="hamburger-button">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav :class="{ 'is-open': isMenuOpen }">
         <!-- ログインしている時のメニュー -->
         <template v-if="isLoggedIn">
-          <RouterLink to="/events">イベント一覧</RouterLink>
-          <RouterLink to="/create-event">イベントを作成</RouterLink>
-          <RouterLink to="/mypage">マイページ</RouterLink>
-          <RouterLink to="/profile">プロフィール編集</RouterLink>
+          <RouterLink to="/events" @click="isMenuOpen = false">イベント一覧</RouterLink>
+          <RouterLink to="/create-event" @click="isMenuOpen = false">イベントを作成</RouterLink>
+          <RouterLink to="/mypage" @click="isMenuOpen = false">マイページ</RouterLink>
+          <RouterLink to="/profile" @click="isMenuOpen = false">プロフィール編集</RouterLink>
           <button @click="handleSignOut" class="logout-button">ログアウト</button>
         </template>
         <!-- ログインしていない時のメニュー -->
         <template v-else>
-          <RouterLink to="/events">イベント一覧</RouterLink>
-          <RouterLink to="/login">ログイン</RouterLink>
-          <RouterLink to="/signup">新規登録</RouterLink>
+          <RouterLink to="/events" @click="isMenuOpen = false">イベント一覧</RouterLink>
+          <RouterLink to="/login" @click="isMenuOpen = false">ログイン</RouterLink>
+          <RouterLink to="/signup" @click="isMenuOpen = false">新規登録</RouterLink>
         </template>
       </nav>
     </div>

@@ -1,55 +1,189 @@
 /* src/assets/main.css */
 
-/* === 汎用カードスタイル === */
-/* ログイン画面やプロフィール画面で使われる、白い背景のカード */
-.card {
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  padding: 2rem;
-  max-width: 600px;
-  margin: 2rem auto;
+/* === 1. Google Fonts のインポート === */
+/* Noto Sans JP (本文用) と M PLUS Rounded 1c (見出し用・丸ゴシック) を読み込み */
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+/* === 2. カラー変数の定義 === */
+:root {
+  --color-primary: #FFC300;     /* メインの黄 */
+  --color-secondary: #A0D2EB;  /* サブの水色 */
+  --color-accent-pink: #FFB6C1; /* アクセントのピンク (例) */
+  --color-accent-green: #98FB98; /* アクセントの緑 (例) */
+
+  --color-text: #333333;          /* テキストのダークグレー */
+  --color-background: #F8F7F5;   /* 背景のオフホワイト */
+  --color-surface: #FFFFFF;     /* カードなどの表面色 */
+  --color-border: #E0E0E0;       /* 薄い境界線 */
 }
 
-/* === 汎用フォームスタイル === */
-/* 入力欄とそのラベルをまとめるグループ */
+/* === 3. 全体的なスタイルのリセットと基本設定 === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: 'Noto Sans JP', sans-serif; /* ★本文用フォントを全体に適用 */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === 4. 共通コンポーネントの基本スタイル === */
+
+/* --- 見出しスタイル --- */
+.heading-main {
+  font-family: 'M PLUS Rounded 1c', sans-serif; /* ★見出し用フォント */
+  color: var(--color-primary);
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- カードスタイル --- */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px; /* ★角丸デザイン */
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* ★薄い影 */
+}
+
+/* --- ボタンの基本スタイル --- */
+.button {
+  display: inline-block;
+  border: none;
+  border-radius: 8px; /* ★角丸デザイン */
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.button:hover {
+  transform: translateY(-2px); /* 少し浮き上がる効果 */
+}
+
+/* メインカラーのボタン */
+.button-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+/* サブカラーのボタン */
+.button-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+}
+
+/* === 5. フォーム要素の共通スタイル === */
 .form-group {
   margin-bottom: 1.5rem;
 }
-/* 「メールアドレス」などのラベル */
+
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
-/* 全ての入力欄（テキスト、テキストエリア、選択ボックス） */
+
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-sizing: border-box; /* paddingやborderが幅に影響しないようにするおまじない */
-  font-family: 'Noto Sans JP', sans-serif; /* 入力される文字にもフォントを適用 */
-  font-size: 1em;
+  border: 1px solid var(--color-border);
+  border-radius: 8px; /* ★角丸 */
+  font-size: 1rem;
+  font-family: 'Noto Sans JP', sans-serif; /* フォントを継承 */
 }
 
-/* === 汎用ボタンスタイル === */
-/* アプリ内の主要なボタン（ログイン、保存する、作成するなど） */
-.button-primary {
-  width: 100%;
-  padding: 0.85rem;
-  background-color: var(--primary-color); /* ブランドカラーの青に！ */
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 1em;
-  transition: background-color 0.2s; /* 色が滑らかに変わるアニメーション */
+.form-group textarea {
+  resize: vertical; /* 縦方向のみリサイズ可能に */
 }
-/* マウスを乗せた時に少し濃い青にする */
-.button-primary:hover {
-  background-color: #1e7a9e; 
+
+/* === 6. レスポンシブデザイン（メディアクエリ） === */
+
+/* 画面幅が768px以下の時（タブレットやスマホ）に適用 */
+@media (max-width: 768px) {
+  
+  /* カードの余白を少し狭くする */
+  .card {
+    padding: 1.5rem;
+  }
+
+  /* 見出しの文字を少し小さくする */
+  .heading-main {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* ヘッダーのナビゲーションを調整（これは今後のための準備） */
+  header nav {
+    /* ここに将来的にスマホ用のメニューのスタイルを書く */
+  }
+}
+
+/* === 7. ハンバーガーメニュー用のスタイル === */
+
+.hamburger-button {
+  display: none; /* ★PCでは非表示 */
+  flex-direction: column;
+  justify-content: space-around;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10; /* メニューより手前に表示 */
+}
+
+.hamburger-button span {
+  width: 2rem;
+  height: 0.25rem;
+  background: var(--text-color);
+  border-radius: 10px;
+}
+
+/* 画面幅が768px以下の時（タブレットやスマホ）に適用 */
+@media (max-width: 768px) {
+  /* ★PCでは横並びだったメニューを非表示に */
+  header nav {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--background-color);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* ★メニューが開かれた時のスタイル */
+  header nav.is-open {
+    display: flex;
+  }
+
+  /* メニュー内のリンクのスタイル */
+  header nav a {
+    margin: 1.5rem 0;
+    font-size: 1.5rem;
+  }
+
+  /* ★ハンバーガーボタンをスマホでのみ表示 */
+  .hamburger-button {
+    display: flex;
+  }
 }

@@ -47,27 +47,30 @@ const handleCreateEvent = async () => {
 
 <template>
   <div class="card">
-    <h2>新しいイベントを作成する</h2>
-    <form @submit.prevent="handleCreateEvent">
-      <div class="form-group">
-        <label for="title">イベント名</label>
-        <input type="text" id="title" v-model="title" required />
-      </div>
-      <div class="form-group">
-        <label for="description">イベント詳細</label>
-        <textarea id="description" v-model="description" rows="5" required></textarea>
-      </div>
-      <div class="form-group">
-        <label for="location">開催場所</label>
-        <input type="text" id="location" v-model="location" required />
-      </div>
-      <div class="form-group">
-        <label for="eventDate">開催日時</label>
-        <!-- 日付と時間を簡単に入力できるtypeを使用 -->
-        <input type="datetime-local" id="eventDate" v-model="eventDate" required />
-      </div>
-      <button type="submit" class="button-primary">作成する</button>
-    </form>
+    <h2 class="heading-main">新しいイベントを作成</h2> 
+      <form @submit.prevent="handleCreateEvent">
+        <div class="form-group">
+          <label for="title">イベント名</label>
+          <input type="text" id="title" v-model="title" required />
+        </div>
+
+        <div class="form-group">
+          <label for="description">イベント詳細</label>
+          <textarea id="description" v-model="description" rows="5" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="location">開催場所</label>
+          <input type="text" id="location" v-model="location" required />
+        </div>
+
+        <div class="form-group">
+          <label for="eventDate">開催日時</label>
+          <input type="datetime-local" id="eventDate" v-model="eventDate" required />
+        </div>
+
+        <button type="submit" class="button button-primary">作成する</button>
+      </form>
   </div>
 </template>
 
