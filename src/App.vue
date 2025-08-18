@@ -1,32 +1,45 @@
 <!-- src/App.vue -->
+<!-- src/App.vue の <script setup> -->
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue'; // onMounted をインポートに追加
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import logo from './assets/symbol-logo.png';
+import SplashScreen from './components/SplashScreen.vue'; // ★ SplashScreenをインポート
 
 const isLoggedIn = ref(false);
 const router = useRouter();
 const auth = getAuth();
-const isMenuOpen = ref(false); // ★★★ ハンバーガーメニュー用のスイッチを追加 ★★★
 
-// ユーザーのログイン状態を監視し、isLoggedInの値を更新する
+// --- ★ ここからがアニメーション用の新しいロジック ---
+const isLoading = ref(true); // スプラッシュスクリーンを表示中かどうかのスイッチ
+const isAnimating = ref(false); // アニメーションが実行中かどうかのスイッチ
+
+// ページが読み込まれたら、アニメーションを開始
+onMounted(() => {
+  // 1.5秒待ってから、アニメーションを開始
+  setTimeout(() => {
+    isAnimating.value = true;
+    // さらにアニメーション時間(0.8秒)待ってから、スプラッシュスクリーンを完全に非表示にする
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 800);
+  }, 1500);
+});
+// --- ★ アニメーション用ロジックここまで ---
+
 onAuthStateChanged(auth, (user) => {
   isLoggedIn.value = !!user;
 });
 
-// ログアウト処理
-const handleSignOut = () => {
-  signOut(auth).then(() => {
-    // ログアウト後、ログインページに移動
-    router.push('/login');
-  });
-};
+const handleSignOut = () => { /* ... 変更なし ... */ };
 </script>
 
 <!-- src/App.vue の <template> の中身を上書き -->
 <template>
-  <header>
+  <SplashScreen v-if="isLoading" :class="{ 'is-animating': isAnimating }" />
+
+  <header :class="{ 'is-animating': isAnimating }">
     <div class="nav-container">
       <RouterLink to="/events" class="brand-identity">
         <img :src="logo" alt="Neighbor Link Symbol" class="symbol-logo" />
@@ -56,7 +69,8 @@ const handleSignOut = () => {
       </nav>
     </div>
   </header>
-  <main>
+
+  <main :class="{ 'is-animating': isAnimating }">
     <RouterView />
   </main>
 </template>

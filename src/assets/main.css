@@ -187,3 +187,38 @@ main {
     font-size: 1.5rem; /* ★ ログアウトボタンのスタイルを追加！ */
   }
 }
+
+/* === 8. 起動アニメーション用のスタイル === */
+
+/* --- アニメーション前の初期状態 --- */
+/* ヘッダーは透明で、画面の外（上）に隠しておく */
+header {
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity 0.5s ease-out 0.3s, transform 0.5s ease-out 0.3s;
+}
+/* メインコンテンツは透明で、画面の外（下）に隠しておく */
+main {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.5s ease-out 0.3s, transform 0.5s ease-out 0.3s;
+}
+
+/* --- アニメーションが開始されたら（is-animatingクラスが付いたら）--- */
+/* ヘッダーを所定の位置に表示 */
+header.is-animating {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* メインコンテンツを所定の位置に表示 */
+main.is-animating {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* スプラッシュスクリーンを透明にして、ヘッダーのロゴの位置まで縮小・移動させる */
+.splash-screen.is-animating .logo-container {
+  /* ★ここの transform の値は、あなたのヘッダーのロゴの位置に合わせて微調整が必要な場合があります */
+  transform: translate(-45vw, -45vh) scale(0.5); 
+  opacity: 0;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+}
