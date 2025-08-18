@@ -117,28 +117,6 @@ main {
   resize: vertical; /* 縦方向のみリサイズ可能に */
 }
 
-/* === 6. レスポンシブデザイン（メディアクエリ） === */
-
-/* 画面幅が768px以下の時（タブレットやスマホ）に適用 */
-@media (max-width: 768px) {
-  
-  /* カードの余白を少し狭くする */
-  .card {
-    padding: 1.5rem;
-  }
-
-  /* 見出しの文字を少し小さくする */
-  .heading-main {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  /* ヘッダーのナビゲーションを調整（これは今後のための準備） */
-  header nav {
-    /* ここに将来的にスマホ用のメニューのスタイルを書く */
-  }
-}
-
 /* === 7. ハンバーガーメニュー用のスタイル === */
 
 .hamburger-button {
@@ -163,7 +141,22 @@ main {
 
 /* 画面幅が768px以下の時（タブレットやスマホ）に適用 */
 @media (max-width: 768px) {
-  /* ★PCでは横並びだったメニューを非表示に */
+
+  /* --- カードと見出しの調整 --- */
+  .card {
+    padding: 1.5rem;
+  }
+  .heading-main {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* --- ハンバーガーメニューの表示 --- */
+  .hamburger-button {
+    display: flex;
+  }
+
+  /* --- メニュー全体のスタイル --- */
   header nav {
     display: none;
     position: absolute;
@@ -178,19 +171,19 @@ main {
     z-index: 5;
   }
   
-  /* ★メニューが開かれた時のスタイル */
   header nav.is-open {
     display: flex;
   }
 
-  /* メニュー内のリンクのスタイル */
+  /* --- メニュー内の各項目のスタイル --- */
   header nav a {
     margin: 1.5rem 0;
     font-size: 1.5rem;
+    text-align: center; /* ★ 中央揃えを追加！ */
   }
 
-  /* ★ハンバーガーボタンをスマホでのみ表示 */
-  .hamburger-button {
-    display: flex;
+  header nav .logout-button {
+    margin: 1.5rem 0;
+    font-size: 1.5rem; /* ★ ログアウトボタンのスタイルを追加！ */
   }
 }
