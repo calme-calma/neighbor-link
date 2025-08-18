@@ -37,6 +37,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+main {
+  padding: 1rem;
+  position: relative; /* z-indexを有効にするために必要 */
+  z-index: 1;      /* ★★★ メニュー(5)より低い値を設定 ★★★ */
+}```
+
 /* === 4. 共通コンポーネントの基本スタイル === */
 
 /* --- 見出しスタイル --- */
@@ -169,6 +175,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    z-index: 5;
   }
   
   /* ★メニューが開かれた時のスタイル */
