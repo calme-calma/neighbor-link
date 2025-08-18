@@ -144,5 +144,21 @@ nav a {
 nav a:hover {
   color: var(--primary-color);
 }
-.logout-button { /* 変更なし */ }
+
+.logout-button {
+  background: none;
+  border: none;
+  color: var(--text-color); /* 通常時の色をテキストカラーに合わせる */
+  cursor: pointer;
+  padding: 0;
+  margin-left: 1.5rem; /* 他のリンクとの間隔を合わせる */
+  font-weight: 700; /* 他のリンクと太さを合わせる */
+  font-size: 1rem; /* 他のリンクとサイズを合わせる */
+  font-family: inherit; /* 親要素のフォントを継承する */
+  transition: color 0.2s;
+}
+
+.logout-button:hover {
+  color: var(--color-primary); /* ホバー時の色をメインカラーに */
+}
 </style>
