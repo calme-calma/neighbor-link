@@ -10,6 +10,7 @@ import SplashScreen from './components/SplashScreen.vue'; // ★ SplashScreenを
 const isLoggedIn = ref(false);
 const router = useRouter();
 const auth = getAuth();
+const isMenuOpen = ref(false);
 
 // --- ★ ここからがアニメーション用の新しいロジック ---
 const isLoading = ref(true); // スプラッシュスクリーンを表示中かどうかのスイッチ
