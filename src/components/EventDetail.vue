@@ -46,21 +46,45 @@ onMounted(async () => {
 
 // 「参加する」ボタンのロジックは、以前のフェーズで完成しているので変更なし
 const handleAttend = async () => {
-  const user = auth.currentUser;
-  if (!user) {
-    alert('参加するにはログインが必要です。');
-    return;
-  }
-  try {
-    await addDoc(collection(db, "attendances"), {
-      userId: user.uid,
-      eventId: eventId,
-      createdAt: serverTimestamp()
-    });
-    alert('イベントへの参加登録が完了しました！');
-  } catch (error) {
-    console.error("参加登録エラー: ", error);
-    alert('エラーが発生しました。');
+  if (confirm('このイベントに参加しますか？')) {
+    const user = auth.currentUser;
+    if (!user) {
+      alert('参加するにはログインが必要です。');
+      return;
+    }
+
+    try {
+      // --- ★★★ ここからが重複チェックのロジック ★★★ ---
+
+      // 1. データベースに問い合わせる準備
+      const attendancesRef = collection(db, "attendances");
+      const q = query(attendancesRef, 
+        where("userId", "==", user.uid), 
+        where("eventId", "==", eventId)
+      );
+
+      // 2. 問い合わせを実行
+      const querySnapshot = await getDocs(q);
+
+      // 3. 結果を判断
+      if (!querySnapshot.empty) {
+        // もし結果が「空でなかった」ら、それは既に参加済みということ
+        alert('あなたはこのイベントに既に参加しています。');
+      } else {
+        // もし結果が「空だった」ら、まだ参加していないので登録処理を実行
+        await addDoc(collection(db, "attendances"), {
+          userId: user.uid,
+          eventId: eventId,
+          createdAt: serverTimestamp()
+        });
+        alert('イベントへの参加登録が完了しました！');
+      }
+      // --- ★★★ 重複チェックのロジックここまで ★★★ ---
+
+    } catch (error) {
+      console.error("参加登録エラー: ", error);
+      alert('エラーが発生しました。');
+    }
   }
 };
 </script>
