@@ -1,7 +1,7 @@
 <!-- src/components/EventDetail.vue -->
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRoute, RouterLink } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { db } from '../firebase'; // authのインポートは不要なので削除
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'; // addDocとserverTimestampを追加
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -9,7 +9,6 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 const route = useRoute();
 const event = ref(null);
 const creatorProfile = ref(null); // 主催者プロフィールを入れる箱
-const organizer = ref(null); 
 const eventId = route.params.id;
 const isLoggedIn = ref(false);
 
@@ -20,74 +19,48 @@ onAuthStateChanged(auth, (user) => {
 
 // onMountedで、イベント情報と主催者情報を両方取得する
 onMounted(async () => {
-  // --- 1. イベント情報の取得 ---
+  // 1. まずイベント情報を取得
   const eventDocRef = doc(db, "events", eventId);
   const eventDocSnap = await getDoc(eventDocRef);
 
-  if (!eventDocSnap.exists()) {
-    console.log("No such document!");
-    return; // イベントが見つからなければ、ここで処理を終了
-  }
-  
-  const eventData = eventDocSnap.data();
-  event.value = eventData;
+  if (eventDocSnap.exists()) {
+    const eventData = eventDocSnap.data();
+    event.value = eventData;
 
-  // --- 2. 主催者情報の取得 ---
-  // イベント情報にorganizerIdが含まれていれば
-  if (eventData.organizerId) {
-    // 'users'コレクションから、organizerIdと一致するuserIdを持つプロフィールを探す
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("userId", "==", eventData.organizerId));
-    const querySnapshot = await getDocs(q);
+    // 2. イベント情報から主催者のID (creatorId) を取得
+    const creatorId = eventData.creatorId;
+    if (creatorId) {
+      // 3. creatorIdを使って、usersコレクションから主催者のプロフィールを探す
+      const q = query(collection(db, "users"), where("userId", "==", creatorId));
+      const querySnapshot = await getDocs(q);
 
-    // もしプロフィールが見つかれば
-    if (!querySnapshot.empty) {
-      organizer.value = querySnapshot.docs[0].data(); // データを「箱」に入れる
+      if (!querySnapshot.empty) {
+        // 4. 見つかったプロフィールを箱に入れる
+        creatorProfile.value = querySnapshot.docs[0].data();
+      }
     }
+  } else {
+    console.log("No such event document!");
   }
 });
 
 // 「参加する」ボタンのロジックは、以前のフェーズで完成しているので変更なし
 const handleAttend = async () => {
-  if (confirm('このイベントに参加しますか？')) {
-    const user = auth.currentUser;
-    if (!user) {
-      alert('参加するにはログインが必要です。');
-      return;
-    }
-
-    try {
-      // --- ★★★ ここからが重複チェックのロジック ★★★ ---
-
-      // 1. データベースに問い合わせる準備
-      const attendancesRef = collection(db, "attendances");
-      const q = query(attendancesRef, 
-        where("userId", "==", user.uid), 
-        where("eventId", "==", eventId)
-      );
-
-      // 2. 問い合わせを実行
-      const querySnapshot = await getDocs(q);
-
-      // 3. 結果を判断
-      if (!querySnapshot.empty) {
-        // もし結果が「空でなかった」ら、それは既に参加済みということ
-        alert('あなたはこのイベントに既に参加しています。');
-      } else {
-        // もし結果が「空だった」ら、まだ参加していないので登録処理を実行
-        await addDoc(collection(db, "attendances"), {
-          userId: user.uid,
-          eventId: eventId,
-          createdAt: serverTimestamp()
-        });
-        alert('イベントへの参加登録が完了しました！');
-      }
-      // --- ★★★ 重複チェックのロジックここまで ★★★ ---
-
-    } catch (error) {
-      console.error("参加登録エラー: ", error);
-      alert('エラーが発生しました。');
-    }
+  const user = auth.currentUser;
+  if (!user) {
+    alert('参加するにはログインが必要です。');
+    return;
+  }
+  try {
+    await addDoc(collection(db, "attendances"), {
+      userId: user.uid,
+      eventId: eventId,
+      createdAt: serverTimestamp()
+    });
+    alert('イベントへの参加登録が完了しました！');
+  } catch (error) {
+    console.error("参加登録エラー: ", error);
+    alert('エラーが発生しました。');
   }
 };
 </script>
@@ -113,20 +86,6 @@ const handleAttend = async () => {
       </div>
       
       <hr />
-
-      <div v-if="organizer" class="organizer-info card">
-        <h4>主催者</h4>
-        <div class="organizer-profile">
-          <!-- 将来ここにプロフィール画像が入る -->
-          <div class="organizer-avatar"></div> 
-          <div class="organizer-details">
-            <strong>{{ organizer.nickname }}</strong>
-            <!-- <p>自己紹介文などをここに表示</p> -->
-          </div>
-        </div>
-        <!-- 注意：まだ主催者の公開プロフィールページはないので、このリンクは将来のための準備です -->
-        <!-- <RouterLink :to="'/user/' + organizer.userId">プロフィールを見る</RouterLink> -->
-      </div>
       <p class="description">{{ event.description }}</p>
     </div>
 
@@ -172,31 +131,6 @@ const handleAttend = async () => {
 }
 hr { margin: 2rem 0; border-color: var(--color-border); }
 .description { line-height: 1.8; }
-
-/* 主催者情報用のスタイル */
-.organizer-info {
-  margin-bottom: 2rem;
-  padding: 1.5rem; /* カードのスタイルを少し上書き */
-}
-.organizer-info h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-.organizer-profile {
-  display: flex;
-  align-items: center;
-}
-.organizer-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%; /* 円形にする */
-  background-color: var(--color-secondary); /* 仮の背景色 */
-  margin-right: 1rem;
-}
-.organizer-details strong {
-  font-size: 1.1rem;
-}
 
 /* フローティングフッターのスタイル */
 .floating-footer {

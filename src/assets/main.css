@@ -196,9 +196,6 @@ header {
   opacity: 0;
   transform: translateY(-100%);
   transition: opacity 0.5s ease-out 0.3s, transform 0.5s ease-out 0.3s;
-  position: relative;
-  z-index: 10;
-  width: 100%; /* ヘッダーが画面幅全体を確実に覆うように念のため指定 */
 }
 /* メインコンテンツは透明で、画面の外（下）に隠しておく */
 main {
