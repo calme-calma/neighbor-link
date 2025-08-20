@@ -1,14 +1,16 @@
-// src/router.js (改善版)
-import { createRouter, createWebHistory } from 'vue-router';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { createRouter, createWebHistory } from 'vue-router'
 
-import Login from './components/Login.vue';
-import SignUp from './components/SignUp.vue';
-import Profile from './components/Profile.vue';
-import EventsList from './components/EventsList.vue';
-import EventDetail from './components/EventDetail.vue';
-import MyPage from './components/MyPage.vue';
-import CreateEvent from './components/CreateEvent.vue';
+// --- パスをすべて「./components/」に修正 ---
+import EventsList from './components/EventsList.vue'
+import Login from './components/Login.vue'
+import SignUp from './components/SignUp.vue'
+import CreateEvent from './components/CreateEvent.vue'
+import MyPage from './components/MyPage.vue'
+import EventDetail from './components/EventDetail.vue'
+import Profile from './components/Profile.vue'
+
+// authStoreをインポート
+import { useAuthStore } from './stores/authStore'
 
 const routes = [
   { path: '/login', component: Login },
@@ -18,48 +20,39 @@ const routes = [
   { path: '/events', component: EventsList },
   { path: '/event/:id', component: EventDetail },
   { path: '/mypage', component: MyPage, meta: { requiresAuth: true } },
-  { path: '/create-event', component: CreateEvent, meta: { requiresAuth: true } }
-];
+  { path: '/create-event', component: CreateEvent, meta: { requiresAuth: true } },
+]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-});
+})
 
-// ▼▼▼ 新しい「賢い門番」のロジック ▼▼▼
 
-// この関数は、Firebaseの初期認証が終わるのを待つ
-const getCurrentUser = () => {
-  return new Promise((resolve, reject) => {
-    const removeListener = onAuthStateChanged(
-      getAuth(),
-      (user) => {
-        removeListener();
-        resolve(user);
-      },
-      reject
-    );
-  });
-};
-
+// ナビゲーションガード
 router.beforeEach(async (to, from, next) => {
-  const requiresAuth = to.meta.requiresAuth; // 行き先は認証が必要か？
-  const user = getAuth().currentUser; // 現在のユーザー情報は？
+  // authStoreをここで初期化
+  const authStore = useAuthStore();
 
-  // 認証が必要なページに、まだログインしていないユーザーがアクセスしようとした場合
-  if (requiresAuth && !user) {
-    // Firebaseの初期化が終わるのを待ってから、もう一度判断する
-    // これにより、ページリロード時にも正しくログイン状態を判定できる
-    if (await getCurrentUser()) {
-      next(); // 待った結果、ログインしていたので通す
-    } else {
-      alert('このページを見るにはログインが必要です。');
-      next('/login'); // 待ってもログインしていなかったので、ログインページへ
-    }
+  // Firebaseの認証状態の初期チェックが完了するまで待つ
+  await authStore.waitForAuth();
+
+  const requiresAuth = to.meta.requiresAuth;
+  const isLoggedIn = authStore.isLoggedIn;
+
+  if (requiresAuth && !isLoggedIn) {
+    // ログインが必要なページに、未ログインの状態でアクセスした場合
+    // -> ログインページにリダイレクト
+    next('/login');
+  } else if ((to.path === '/login' || to.path === '/signup') && isLoggedIn) {
+    // ログイン済みのユーザーがログインページやサインアップページにアクセスした場合
+    // -> イベント一覧ページにリダイレクト
+    next('/events');
   } else {
-    // 認証が不要なページ、または既にログインしている場合は、そのまま通す
+    // それ以外の場合（アクセスを許可する場合）
     next();
   }
 });
 
-export default router;
+
+export default router

@@ -6,10 +6,13 @@ import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import logo from './assets/symbol-logo.png';
 import SplashScreen from './components/SplashScreen.vue'; // ★ SplashScreenをインポート
+import { useAuthStore } from './stores/authStore'
 
 const isLoggedIn = ref(false);
 const router = useRouter();
 const auth = getAuth();
+const authStore = useAuthStore()
+const isMenuOpen = ref(false)
 
 // --- ★ ここからがアニメーション用の新しいロジック ---
 const isLoading = ref(true); // スプラッシュスクリーンを表示中かどうかのスイッチ
@@ -32,7 +35,11 @@ onAuthStateChanged(auth, (user) => {
   isLoggedIn.value = !!user;
 });
 
-const handleSignOut = () => { /* ... 変更なし ... */ };
+// ★ ログアウト処理を定義
+const handleLogout = async () => {
+  await authStore.logout() // ストアのlogoutメソッドを呼び出す
+  router.push('/login')    // ログインページにリダイレクト
+}
 </script>
 
 <!-- src/App.vue の <template> の中身を上書き -->
@@ -58,7 +65,7 @@ const handleSignOut = () => { /* ... 変更なし ... */ };
           <RouterLink to="/create-event" @click="isMenuOpen = false">イベントを作成</RouterLink>
           <RouterLink to="/mypage" @click="isMenuOpen = false">マイページ</RouterLink>
           <RouterLink to="/profile" @click="isMenuOpen = false">プロフィール編集</RouterLink>
-          <button @click="handleSignOut" class="logout-button">ログアウト</button>
+          <button @click="handleLogout" class="logout-button">ログアウト</button>
         </template>
         <!-- ログインしていない時のメニュー -->
         <template v-else>
