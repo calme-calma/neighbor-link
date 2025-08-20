@@ -31,7 +31,7 @@ const handleCreateEvent = async () => {
       description: description.value,
       location: location.value,
       eventDate: eventDate.value,
-      creatorId: user.uid, // ★★★ これが「誰が作ったか」を記録する重要な情報！
+      organizerId: user.uid, // ★★★ 名前を organizerId に統一！ ★★★
       createdAt: serverTimestamp() // 作成日時
     });
 
