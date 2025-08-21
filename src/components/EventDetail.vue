@@ -1,6 +1,6 @@
 <!-- src/components/EventDetail.vue -->
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { db } from '../firebase'; // authのインポートは不要なので削除
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'; // addDocとserverTimestampを追加
@@ -11,6 +11,21 @@ const event = ref(null);
 const creatorProfile = ref(null); // 主催者プロフィールを入れる箱
 const eventId = route.params.id;
 const isLoggedIn = ref(false);
+
+// ★ 日付をフォーマットするcomputedプロパティを追加
+const formattedDate = computed(() => {
+  if (!event.value || !event.value.eventDate || typeof event.value.eventDate.toDate !== 'function') {
+    return '日時情報なし';
+  }
+  const date = event.value.eventDate.toDate();
+  return date.toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+});
 
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
@@ -27,8 +42,8 @@ onMounted(async () => {
     const eventData = eventDocSnap.data();
     event.value = eventData;
 
-    // 2. イベント情報から主催者のID (creatorId) を取得
-    const creatorId = eventData.creatorId;
+    // 2. イベント情報から主催者のID (organizerId) を取得
+    const creatorId = eventData.organizerId; // ★ organizerId に修正
     if (creatorId) {
       // 3. creatorIdを使って、usersコレクションから主催者のプロフィールを探す
       const q = query(collection(db, "users"), where("userId", "==", creatorId));
@@ -77,7 +92,7 @@ const handleAttend = async () => {
       <div class="info-grid">
         <div class="info-item">
           <span class="icon">🗓️</span>
-          <span>{{ event.eventDate }}</span>
+          <span>{{ formattedDate }}</span>
         </div>
         <div class="info-item">
           <span class="icon">📍</span>

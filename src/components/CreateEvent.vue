@@ -34,6 +34,7 @@ const createEvent = async () => {
     // ★ 保存するデータも eventData.value を使う
     await addDoc(collection(db, 'events'), {
       ...eventData.value,
+      eventDate: new Date(eventData.value.eventDate), 
       organizerId: auth.currentUser.uid,
       createdAt: new Date()
     });

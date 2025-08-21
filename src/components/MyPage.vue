@@ -7,6 +7,21 @@ import { RouterLink } from 'vue-router';
 
 const attendingEvents = ref([]); // 参加予定のイベント情報を入れる「箱」
 
+// ★ タイムスタンプをフォーマットする関数
+const formatTimestamp = (timestamp) => {
+  if (!timestamp || typeof timestamp.toDate !== 'function') {
+    return '日時情報なし';
+  }
+  const date = timestamp.toDate();
+  return date.toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 onMounted(async () => {
   const user = auth.currentUser;
   if (user) {
@@ -34,7 +49,7 @@ onMounted(async () => {
         <li v-for="event in attendingEvents" :key="event.id" class="event-card">
           <RouterLink :to="'/event/' + event.id">
             <h3>{{ event.title }}</h3>
-            <p>{{ event.eventDate }}</p>
+            <p>🗓️ {{ formatTimestamp(event.eventDate) }}</p>
             <p>📍 {{ event.location }}</p>
           </RouterLink>
         </li>

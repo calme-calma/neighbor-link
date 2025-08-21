@@ -18,7 +18,7 @@ const routes = [
   { path: '/', redirect: '/events' },
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/events', component: EventsList },
-  { path: '/event/:id', component: EventDetail },
+  { path: '/event/:id', component: EventDetail, name: 'EventDetail' },
   { path: '/mypage', component: MyPage, meta: { requiresAuth: true } },
   { path: '/create-event', component: CreateEvent, meta: { requiresAuth: true } },
 ]
