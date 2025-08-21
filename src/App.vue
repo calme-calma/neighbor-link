@@ -168,4 +168,65 @@ nav a:hover {
 .logout-button:hover {
   color: var(--color-primary); /* ホバー時の色をメインカラーに */
 }
+
+/* === ハンバーガーメニューボタンの基本スタイル === */
+.hamburger-button {
+  display: none; /* ★ PCでは隠す */
+  flex-direction: column;
+  justify-content: space-around;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2000; /* ★メニューより上に表示されるように高い値を設定 */
+}
+
+.hamburger-button span {
+  width: 2rem;
+  height: 0.25rem;
+  background: var(--text-color);
+  border-radius: 10px;
+  transition: all 0.3s linear;
+  position: relative;
+  transform-origin: 1px;
+}
+
+
+/* === ここからがスマホ表示用のレスポンシブスタイル === */
+@media (max-width: 768px) {
+  
+  /* --- ハンバーガーボタンを表示 --- */
+  .hamburger-button {
+    display: flex; /* ★ スマホでは表示 */
+  }
+
+  /* --- ナビゲーションメニューの基本スタイル（閉じた状態） --- */
+  nav {
+    display: none; /* ★ 通常時は隠す */
+    position: absolute; /* ★ ページの上に浮かせる */
+    top: 60px; /* ★ ヘッダーの高さ分だけ下げる */
+    left: 0;
+    right: 0;
+    
+    background-color: var(--background-color);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    
+    flex-direction: column; /* ★ リンクを縦に並べる */
+    align-items: center; /* ★ 中央揃えに */
+    padding: 1rem 0;
+  }
+
+  /* --- メニューが開いた時のスタイル --- */
+  nav.is-open {
+    display: flex; /* ★ is-openクラスが付いたら表示する */
+  }
+  
+  /* --- メニュー内のリンクのスタイル --- */
+  nav a, nav .logout-button {
+    margin: 0.75rem 0; /* 上下のマージンを調整 */
+    font-size: 1.1rem;
+  }
+}
 </style>
