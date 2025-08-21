@@ -8,6 +8,7 @@ import CreateEvent from './components/CreateEvent.vue'
 import MyPage from './components/MyPage.vue'
 import EventDetail from './components/EventDetail.vue'
 import Profile from './components/Profile.vue'
+import CategoryEvents from './components/CategoryEvents.vue'
 
 // authStoreをインポート
 import { useAuthStore } from './stores/authStore'
@@ -21,13 +22,19 @@ const routes = [
   { path: '/event/:id', component: EventDetail, name: 'EventDetail' },
   { path: '/mypage', component: MyPage, meta: { requiresAuth: true } },
   { path: '/create-event', component: CreateEvent, meta: { requiresAuth: true } },
+
+  // ★ 2. カテゴリ別一覧ページのルートを追加
+  { 
+    path: '/category/:slug', // :slug の部分が動的に変わる
+    name: 'CategoryEvents', 
+    component: CategoryEvents 
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 })
-
 
 // ナビゲーションガード
 router.beforeEach(async (to, from, next) => {

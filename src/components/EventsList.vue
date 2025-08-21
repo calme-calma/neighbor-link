@@ -79,7 +79,9 @@ onMounted(async () => {
         class="category-section"
       >
         <!-- カテゴリ名を表示 -->
-        <h2>{{ group.category.name }}</h2>
+        <RouterLink :to="{ name: 'CategoryEvents', params: { slug: group.category.slug } }" class="category-title-link">
+          <h2>{{ group.category.name }} <span class="see-more-arrow">→</span></h2>
+        </RouterLink>
         
         <!-- イベントカードを横スライドで表示するコンテナ -->
         <div class="event-scroll-container">
@@ -116,6 +118,29 @@ h2 {
   margin-bottom: 1rem;
   padding-left: 0.5rem;
   border-left: 5px solid #f0ad4e;
+}
+
+.category-title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.category-title-link h2 {
+  transition: color 0.2s;
+}
+
+.category-title-link:hover h2 {
+  color: #ec971f; /* ホバー時に少し色を変える */
+}
+
+.see-more-arrow {
+  font-size: 1.5rem;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.category-title-link:hover .see-more-arrow {
+  transform: translateX(5px); /* ホバー時に矢印を少し動かす */
 }
 
 .event-scroll-container {
