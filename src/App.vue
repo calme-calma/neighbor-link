@@ -105,14 +105,18 @@ body {
 
 main {
   padding: 1rem;
+  position: relative; /* ★ z-indexを有効にするために追加 */
+  z-index: 1;       /* ★ ヘッダーより低い重なり順に設定 */
 }
 
 /* === ヘッダー（ナビゲーションバー）のスタイル === */
 header {
   background-color: var(--background-color);
-  padding: 0.75rem 1rem; /* 上下の余白を少し調整 */
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--light-gray);
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  position: relative; /* ★ z-indexを有効にするために追加 */
+  z-index: 100;     /* ★ 重なり順を高く設定 */
 }
 
 .nav-container {
@@ -139,6 +143,10 @@ header {
   font-size: 1.25rem; /* 文字サイズを少し大きく */
   font-weight: 700; /* 太字に */
   color: var(--text-color); /* 文字色を指定 */
+}
+
+nav {
+  display: flex; /* PCではFlexboxで横並びに */
 }
 
 nav a {
@@ -226,6 +234,34 @@ nav a:hover {
   /* --- メニュー内のリンクのスタイル --- */
   nav a, nav .logout-button {
     margin: 0.75rem 0; /* 上下のマージンを調整 */
+    font-size: 1.1rem;
+  }
+}
+
+/* === レスポンシブスタイルの微調整 === */
+@media (max-width: 768px) {
+  /* PC用のナビゲーションリンクを非表示にする */
+  .nav-container > nav {
+    display: none;
+  }
+  
+  /* is-openクラスがついた時だけ表示する */
+  .nav-container > nav.is-open {
+    display: flex;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background-color: var(--background-color);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0;
+  }
+
+  .nav-container > nav.is-open a,
+  .nav-container > nav.is-open .logout-button {
+    margin: 0.75rem 0;
     font-size: 1.1rem;
   }
 }
