@@ -3,6 +3,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+// ★ 1. storage から必要な関数をインポート
+import { getStorage } from "firebase/storage";
 
 // ▼▼▼ フェーズ1でメモした、あなたの「合言葉」をここに貼り付け ▼▼▼
 const firebaseConfig = {
@@ -17,6 +19,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 他のファイルで使えるように、機能をエクスポート（外部に公開）します
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ★ export はこの一行だけにする
+export { db, auth, storage };
