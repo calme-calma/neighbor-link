@@ -9,6 +9,12 @@ const route = useRoute();
 const event = ref(null);
 const eventId = route.params.id;
 const isLoggedIn = ref(false);
+const isLoading = ref(true);
+
+// ★ 新しく追加するデータを保持するref
+const organizer = ref(null);      // 主催者情報
+const attendees = ref([]);        // 参加者リスト
+const attendeeCount = ref(0);     // 参加者数
 
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
@@ -30,14 +36,44 @@ const formattedDate = computed(() => {
   });
 });
 
+// --- ★ データ取得ロジックを大幅に強化 ---
 onMounted(async () => {
-  const eventDocRef = doc(db, "events", eventId);
-  const eventDocSnap = await getDoc(eventDocRef);
-
-  if (eventDocSnap.exists()) {
+  try {
+    // --- 1. イベントの基本情報を取得 ---
+    const eventDocRef = doc(db, "events", eventId);
+    const eventDocSnap = await getDoc(eventDocRef);
+    if (!eventDocSnap.exists()) {
+      console.log("No such event document!");
+      return;
+    }
     event.value = eventDocSnap.data();
-  } else {
-    console.log("No such event document!");
+
+    // --- 2. 主催者のプロフィール情報を取得 ---
+    if (event.value.organizerId) {
+      const userDocRef = doc(db, "users", event.value.organizerId);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        organizer.value = userDocSnap.data();
+      }
+    }
+
+    // --- 3. 参加者リストを取得 ---
+    const attendanceQuery = query(collection(db, "attendances"), where("eventId", "==", eventId));
+    const attendanceSnapshot = await getDocs(attendanceQuery);
+    attendeeCount.value = attendanceSnapshot.size; // 参加者数を更新
+    
+    // 参加者のプロフィール情報を取得 (最大10人まで表示)
+    const attendeeIds = attendanceSnapshot.docs.slice(0, 10).map(doc => doc.data().userId);
+    if (attendeeIds.length > 0) {
+      const attendeesQuery = query(collection(db, "users"), where("userId", "in", attendeeIds));
+      const attendeesSnapshot = await getDocs(attendeesQuery);
+      attendees.value = attendeesSnapshot.docs.map(doc => doc.data());
+    }
+
+  } catch (error) {
+    console.error("Error fetching event details:", error);
+  } finally {
+    isLoading.value = false;
   }
 });
 
@@ -69,36 +105,50 @@ const handleAttend = async () => {
       <img v-if="event.imageUrl" :src="event.imageUrl" alt="イベントメイン画像">
     </div>
 
-    <!-- ★ コンテンツエリア -->
-    <div class="content-wrapper">
-      <h1>{{ event.title }}</h1>
+   <div class="content-wrapper">
+      <!-- ★ 雰囲気タグ -->
+      <div v-if="event.tags && event.tags.length > 0" class="tags-container">
+        <span v-for="tag in event.tags" :key="tag" class="tag">{{ tag }}</span>
+      </div>
 
-      <!-- アイコン付き基本情報 -->
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="icon">🗓️</span>
-          <span>{{ formattedDate }}</span>
-        </div>
-        <div class="info-item">
-          <span class="icon">📍</span>
-          <span>{{ event.location }}</span>
+      <h1>{{ event.title }}</h1>
+      
+      <!-- ★ 主催者情報 -->
+      <div v-if="organizer" class="organizer-info">
+        <img :src="organizer.iconUrl || '/symbol-logo.png'" class="organizer-icon">
+        <div>
+          <span>主催者</span>
+          <strong>{{ organizer.name || '名前未設定' }}</strong>
         </div>
       </div>
-      
+
+      <!-- 基本情報グリッド -->
+      <div class="info-grid">
+        <div class="info-item"><span>🗓️</span><span>{{ formattedDate }}</span></div>
+        <div class="info-item"><span>📍</span><span>{{ event.location }}</span></div>
+        <!-- ★ 参加費 -->
+        <div v-if="event.price" class="info-item"><span>💰</span><span>{{ event.price }}</span></div>
+      </div>
       <hr />
-      
+
       <p class="description">{{ event.description }}</p>
+      
+      <!-- ★ 参加者リスト (attendeeCountが1以上の場合のみ、このブロック全体が表示される) -->
+      <div v-if="attendeeCount > 0" class="attendees-section">
+        <h3>参加者 ({{ attendeeCount }}人)</h3>
+        <div class="attendees-list">
+          <img v-for="attendee in attendees" :key="attendee.userId" :src="attendee.iconUrl || '/symbol-logo.png'" :title="attendee.name" class="attendee-icon">
+        </div>
+      </div>
+
     </div>
 
-    <!-- ★ フローティング参加ボタン -->
     <div class="floating-footer">
       <button v-if="isLoggedIn" @click="handleAttend" class="join-button">このイベントに参加する</button>
       <RouterLink v-else to="/login" class="join-button">参加するにはログイン</RouterLink>
     </div>
   </div>
-  <div v-else class="loading-container">
-    <p>イベントを読み込んでいます...</p>
-  </div>
+  <div v-else class="loading-container"><p>イベントが見つかりませんでした。</p></div>
 </template>
 
 <style scoped>
@@ -206,5 +256,63 @@ hr {
 .loading-container {
   padding: 2rem;
   text-align: center;
+}
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.tag {
+  background-color: #f0ad4e;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.organizer-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+}
+.organizer-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.organizer-info div {
+  display: flex;
+  flex-direction: column;
+}
+.organizer-info span { font-size: 0.8rem; color: #777; }
+.organizer-info strong { font-size: 1.1rem; }
+
+.attendees-section {
+  margin-top: 2.5rem;
+}
+.attendees-section h3 {
+  font-size: 1.2rem;
+  border-bottom: 2px solid #f0ad4e;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.attendees-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.attendee-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
 }
 </style>

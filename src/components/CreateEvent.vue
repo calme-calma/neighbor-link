@@ -17,8 +17,16 @@ const eventData = ref({
   eventDate: '',
   location: '',
   category: '',
+  price: '', // ★ 参加費フィールドを追加
+  tags: []    // ★ 雰囲気タグ（複数選択なので配列）を追加
 });
 
+// ★ 雰囲気タグの選択肢リストを定義
+const tagOptions = [
+  '初心者歓迎', '一人参加歓迎', '子連れOK',
+  'もくもく作業', 'おしゃべり中心', '途中参加/退出OK',
+  '20代中心', '30代中心', '年齢不問'
+];
 const categories = ref([]);
 // ★ アップロードする画像ファイルを保持するref
 const imageFile = ref(null);
@@ -155,6 +163,23 @@ onMounted(async () => {
         </select>
       </div>
 
+      <!-- 参加費 -->
+      <div class="form-group">
+        <label for="price">参加費（例: 500円, 無料, 飲食代実費など）</label>
+        <input type="text" id="price" v-model="eventData.price" placeholder="無料の場合は「無料」と入力してください">
+      </div>
+      
+      <!-- 雰囲気タグ -->
+      <div class="form-group">
+        <label>雰囲気・タグ（複数選択可）</label>
+        <div class="tags-grid">
+          <div v-for="tag in tagOptions" :key="tag" class="tag-item">
+            <input type="checkbox" :id="tag" :value="tag" v-model="eventData.tags">
+            <label :for="tag">{{ tag }}</label>
+          </div>
+        </div>
+      </div>
+
       <!-- ★ isUploading中はボタンを無効化する -->
       <button type="submit" :disabled="isUploading">
         {{ isUploading ? '作成中...' : '作成する' }}
@@ -192,4 +217,26 @@ input[type="text"]:focus, input[type="datetime-local"]:focus, textarea:focus, se
 textarea { min-height: 150px; resize: vertical; }
 button { padding: 0.8rem 1.8rem; background-color: #f0ad4e; color: white; border: none; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
 button:hover { background-color: #ec971f; }
+
+/* ★ タグ選択エリアのスタイルを追加 */
+.tags-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+}
+
+.tag-item input[type="checkbox"] {
+  width: auto; /* ★幅を自動にリセット */
+  margin-right: 0.5rem;
+}
+
+.tag-item label {
+  font-weight: normal; /* ★ラベルの太さを通常に */
+  margin-bottom: 0;
+}
 </style>

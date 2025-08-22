@@ -1,9 +1,7 @@
-// src/firebase.js
-
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-// ★ 1. storage から必要な関数をインポート
+// ★★★ この一行を、必要な関数がすべて含まれたものに修正 ★★★
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, query, where, orderBy, limit, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // ▼▼▼ フェーズ1でメモした、あなたの「合言葉」をここに貼り付け ▼▼▼
@@ -23,5 +21,4 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// ★ export はこの一行だけにする
 export { db, auth, storage };
