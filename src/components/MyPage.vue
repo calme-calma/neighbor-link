@@ -1,122 +1,232 @@
-<!-- src/components/MyPage.vue -->
 <script setup>
-import { ref, onMounted } from 'vue';
-import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router'; // ★ useRouteをインポート
 import { RouterLink } from 'vue-router';
+import { db, auth } from '../firebase';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 
-const attendingEvents = ref([]); // 参加予定のイベント情報を入れる「箱」
+const route = useRoute(); // ★ 現在のルート情報を取得
+const activeTab = ref('upcoming'); 
+const upcomingEvents = ref([]);
+const pastEvents = ref([]);
+const hostedEvents = ref([]);
+const isLoading = ref(true);
 
-// ★ タイムスタンプをフォーマットする関数
+// タイムスタンプをフォーマットする関数 (MyPage.vue内に再定義)
 const formatTimestamp = (timestamp) => {
-  if (!timestamp || typeof timestamp.toDate !== 'function') {
-    return '日時情報なし';
-  }
+  if (!timestamp || typeof timestamp.toDate !== 'function') return '日時情報なし';
   const date = timestamp.toDate();
-  return date.toLocaleString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  return date.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-onMounted(async () => {
+const fetchMyPageData = async () => {
   const user = auth.currentUser;
-  if (user) {
-    // --- 第1段階：自分の参加記録を探す ---
+  if (!user) {
+    isLoading.value = false;
+    return;
+  }
+  
+  // onMountedの中身をここに移動
+  try {
+    const now = Timestamp.now();
     const attendancesQuery = query(collection(db, "attendances"), where("userId", "==", user.uid));
     const attendanceSnapshot = await getDocs(attendancesQuery);
-    const eventIds = attendanceSnapshot.docs.map(doc => doc.data().eventId);
-
-    // --- 第2段階：参加記録のあるイベントの詳細情報を取得 ---
+    
+    const attendingMap = new Map();
+    attendanceSnapshot.docs.forEach(doc => {
+      attendingMap.set(doc.data().eventId, doc.data().status);
+    });
+    const eventIds = Array.from(attendingMap.keys());
+    
     if (eventIds.length > 0) {
-      const eventPromises = eventIds.map(id => getDoc(doc(db, "events", id)));
-      const eventDocs = await Promise.all(eventPromises);
-      
-      attendingEvents.value = eventDocs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const eventsQuery = query(collection(db, "events"), where("__name__", "in", eventIds));
+      const eventSnapshot = await getDocs(eventsQuery);
+      const allAttendingEvents = eventSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        attendanceStatus: attendingMap.get(doc.id)
+      }));
+      upcomingEvents.value = allAttendingEvents.filter(event => event.eventDate >= now);
+      pastEvents.value = allAttendingEvents.filter(event => event.eventDate < now);
+    } else {
+      // 参加イベントがない場合にリストを空にする
+      upcomingEvents.value = [];
+      pastEvents.value = [];
     }
+
+    const hostedQuery = query(collection(db, "events"), where("organizerId", "==", user.uid));
+    const hostedSnapshot = await getDocs(hostedQuery);
+    hostedEvents.value = hostedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  } catch (error) {
+    console.error("Error fetching mypage data:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// ページが最初に表示されたときにデータを取得
+onMounted(fetchMyPageData);
+
+// ★★★ ルート全体の変更を監視する ★★★
+// routeオブジェクトそのものを監視することで、より確実に変更を検知する
+watch(route, (to, from) => {
+  // マイページに遷移してきた場合のみデータを再取得
+  // (マイページ内のタブ切り替えなどでは実行されないように)
+  if (to.path === '/mypage' && from.path !== '/mypage') {
+    fetchMyPageData();
   }
 });
 </script>
 
 <template>
-  <div class="my-page">
-    <h2>マイページ（参加予定のイベント）</h2>
-    <div v-if="attendingEvents.length > 0">
-      <ul>
-        <li v-for="event in attendingEvents" :key="event.id" class="event-card">
-          <RouterLink :to="'/event/' + event.id">
-            <h3>{{ event.title }}</h3>
-            <p>🗓️ {{ formatTimestamp(event.eventDate) }}</p>
-            <p>📍 {{ event.location }}</p>
-          </RouterLink>
-        </li>
-      </ul>
+  <div class="mypage-container">
+    <h1>マイページ</h1>
+
+    <!-- ★ タブ切り替えUI -->
+    <div class="tabs">
+      <button @click="activeTab = 'upcoming'" :class="{ active: activeTab === 'upcoming' }">
+        参加予定 ({{ upcomingEvents.length }})
+      </button>
+      <button @click="activeTab = 'past'" :class="{ active: activeTab === 'past' }">
+        参加済 ({{ pastEvents.length }})
+      </button>
+      <button @click="activeTab = 'hosted'" :class="{ active: activeTab === 'hosted' }">
+        主催イベント ({{ hostedEvents.length }})
+      </button>
     </div>
-    <div v-else>
-      <p>参加予定のイベントはまだありません。</p>
+
+    <!-- ★ コンテンツ表示エリア -->
+    <div class="tab-content">
+      <div v-if="isLoading"><p>読み込み中...</p></div>
+      
+      <!-- 参加予定リスト -->
+      <div v-show="activeTab === 'upcoming'">
+        <ul v-if="upcomingEvents.length > 0" class="events-grid">
+          <li v-for="event in upcomingEvents" :key="event.id" class="event-card">
+            <RouterLink :to="'/event/' + event.id">
+              <!-- ★ キャンセル済みラベル -->
+              <div v-if="event.attendanceStatus === 'cancelled'" class="status-label cancelled">
+                キャンセル済
+              </div>
+              <img v-if="event.imageUrl" :src="event.imageUrl" class="card-image">
+              <div class="card-content">
+                <h3>{{ event.title }}</h3>
+                <p>🗓️ {{ formatTimestamp(event.eventDate) }}</p>
+                <p>📍 {{ event.location }}</p>
+              </div>
+            </RouterLink>
+          </li>
+        </ul>
+        <p v-else>参加予定のイベントはありません。</p>
+      </div>
+
+      <!-- 参加済リスト -->
+      <div v-show="activeTab === 'past'">
+        <ul v-if="pastEvents.length > 0" class="events-grid">
+          <li v-for="event in pastEvents" :key="event.id" class="event-card">
+            <RouterLink :to="'/event/' + event.id">
+              <img v-if="event.imageUrl" :src="event.imageUrl" class="card-image">
+              <div class="card-content">
+                <h3>{{ event.title }}</h3>
+                <p>🗓️ {{ formatTimestamp(event.eventDate) }}</p>
+              </div>
+            </RouterLink>
+          </li>
+        </ul>
+        <p v-else>参加済のイベントはありません。</p>
+      </div>
+
+      <!-- 主催イベントリスト -->
+      <div v-show="activeTab === 'hosted'">
+        <ul v-if="hostedEvents.length > 0" class="events-grid">
+          <li v-for="event in hostedEvents" :key="event.id" class="event-card">
+            <RouterLink :to="'/event/' + event.id">
+              <img v-if="event.imageUrl" :src="event.imageUrl" class="card-image">
+              <div class="card-content">
+                <h3>{{ event.title }}</h3>
+                <p>🗓️ {{ formatTimestamp(event.eventDate) }}</p>
+              </div>
+            </RouterLink>
+          </li>
+        </ul>
+        <p v-else>主催したイベントはありません。</p>
+      </div>
+
     </div>
   </div>
 </template>
 
 <style scoped>
-.events-list {
-  max-width: 1200px; /* PC表示を考慮して、最大幅を広げる */
-  margin: 2rem auto;
-  padding: 0 1rem; /* スマホ表示で左右に余白を */
+/* ★★★ ここからスタイルを全面的に刷新 ★★★ */
+.mypage-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+h1 { margin-bottom: 2rem; }
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 2rem;
+}
+.tabs button {
+  padding: 1rem 1.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #777;
+  position: relative;
+}
+.tabs button.active {
+  color: #f0ad4e;
+}
+.tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #f0ad4e;
 }
 
-/* カードを横に並べるためのグリッドコンテナ */
-ul {
+.events-grid {
   list-style: none;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr; /* スマホでは縦1列が基本 */
-  gap: 1.5rem; /* カード間の余白 */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
-/* イベントカード本体のスタイル */
 .event-card {
-  background-color: white;
-  border-radius: 16px; /* 角を大きく丸める */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 浮き上がって見える影 */
-  overflow: hidden; /* 角丸からはみ出す要素を隠す */
-  transition: transform 0.2s, box-shadow 0.2s; /* アニメーションの設定 */
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  position: relative; /* ラベル表示の基準点 */
 }
-
-/* マウスを乗せると少し浮き上がるエフェクト */
-.event-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+.event-card a { text-decoration: none; color: inherit; }
+.card-image {
+  height: 150px;
+  background-color: #e0f7fa;
 }
+.card-image img { width: 100%; height: 100%; object-fit: cover; }
+.card-content { padding: 1rem; }
+.card-content h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
+.card-content p { margin: 0; color: #555; }
 
-.event-card a {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  padding: 1.5rem; /* カード内の余白 */
+.status-label.cancelled {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(108, 117, 125, 0.8);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-weight: bold;
+  z-index: 10;
 }
-
-h3 {
-  margin-top: 0;
-  color: var(--primary-color); /* タイトルの色をメインカラーに */
-}
-
-/* ★★★ ここからがレスポンシブ対応 ★★★ */
-
-/* 画面幅が768px以上（タブレット）になったら */
-@media (min-width: 768px) {
-  ul {
-    grid-template-columns: repeat(2, 1fr); /* カードを横2列に */
-  }
-}
-
-/* 画面幅が1024px以上（PC）になったら */
-@media (min-width: 1024px) {
-  ul {
-    grid-template-columns: repeat(3, 1fr); /* カードを横3列に */
-  }
+.event-card a:has(.status-label.cancelled) {
+  opacity: 0.7; /* キャンセル済みは少し薄く表示 */
 }
 </style>

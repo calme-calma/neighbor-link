@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'; // ★ computed をインポート
 import { useRoute, RouterLink } from 'vue-router'; // ★ RouterLink をインポート
 import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import UserProfileModal from './UserProfileModal.vue';
 
@@ -19,6 +19,9 @@ const attendeeCount = ref(0);     // 参加者数
 
 //モーダルを制御するためのrefを追加
 const isModalVisible = ref(false);
+
+const currentUserAttendance = ref(null); // 自分の参加記録を保持する (IDとステータス)
+const isAttending = computed(() => currentUserAttendance.value?.status === 'attending');
 
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
@@ -49,47 +52,90 @@ const isFull = computed(() => {
   return attendeeCount.value >= event.value.capacity;
 });
 
-// --- ★ データ取得ロジックを大幅に強化 ---
-onMounted(async () => {
+const fetchEventDetails = async () => {
+  // onMountedのロジックをここに移動・統合
   try {
-    // --- 1. イベントの基本情報を取得 ---
     const eventDocRef = doc(db, "events", eventId);
     const eventDocSnap = await getDoc(eventDocRef);
-    if (!eventDocSnap.exists()) {
-      console.log("No such event document!");
-      return;
-    }
+    if (!eventDocSnap.exists()) { console.log("No event doc"); return; }
     event.value = eventDocSnap.data();
 
-    // --- 2. 主催者のプロフィール情報を取得 ---
     if (event.value.organizerId) {
       const userDocRef = doc(db, "users", event.value.organizerId);
       const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        organizer.value = userDocSnap.data();
-      }
+      if (userDocSnap.exists()) { organizer.value = userDocSnap.data(); }
     }
 
-    // --- 3. 参加者リストを取得 ---
     const attendanceQuery = query(collection(db, "attendances"), where("eventId", "==", eventId));
     const attendanceSnapshot = await getDocs(attendanceQuery);
-    attendeeCount.value = attendanceSnapshot.size; // 参加者数を更新
     
-    // 参加者のプロフィール情報を取得 (最大10人まで表示)
-    const attendeeIds = attendanceSnapshot.docs.slice(0, 10).map(doc => doc.data().userId);
+    // ★ statusがattendingの参加者のみをカウント・表示対象にする
+    const activeAttendees = attendanceSnapshot.docs.filter(d => d.data().status === 'attending');
+    attendeeCount.value = activeAttendees.length;
+    
+    const attendeeIds = activeAttendees.slice(0, 10).map(doc => doc.data().userId);
     if (attendeeIds.length > 0) {
       const attendeesQuery = query(collection(db, "users"), where("userId", "in", attendeeIds));
       const attendeesSnapshot = await getDocs(attendeesQuery);
       attendees.value = attendeesSnapshot.docs.map(doc => doc.data());
+    } else {
+      attendees.value = []; // 参加者が0人になった場合にリストを空にする
     }
 
+    const user = auth.currentUser;
+    if (user) {
+      const userAttendance = attendanceSnapshot.docs.find(d => d.data().userId === user.uid);
+      if (userAttendance) {
+        currentUserAttendance.value = { id: userAttendance.id, status: userAttendance.data().status };
+      } else {
+        currentUserAttendance.value = null; // 参加記録がない場合はnullに
+      }
+    }
   } catch (error) {
-    console.error("Error fetching event details:", error);
-  } finally {
-    isLoading.value = false;
+    console.error("Error refetching details:", error);
   }
+};
+
+onMounted(async () => {
+  isLoading.value = true;
+  await fetchEventDetails();
+  isLoading.value = false;
 });
 
+// ★ キャンセル処理
+const handleCancel = async () => {
+  if (!currentUserAttendance.value?.id) return;
+  
+  // 確認ポップアップ
+  if (window.confirm('このイベントへの参加を本当にキャンセルしますか？')) {
+    try {
+      const attendanceDocRef = doc(db, 'attendances', currentUserAttendance.value.id);
+      // statusを 'cancelled' に更新
+      await updateDoc(attendanceDocRef, { status: 'cancelled' });
+
+      // 画面の状態も更新
+      currentUserAttendance.value.status = 'cancelled';
+      attendeeCount.value--; // 参加者数を1人減らす
+      
+      await fetchEventDetails(); // ★ データ再取得
+      alert('参加をキャンセルしました。');
+    } catch (error) {
+      console.error("キャンセルエラー: ", error);
+      alert('キャンセル処理中にエラーが発生しました。');
+    }
+  }
+};
+
+// ★ 参加とキャンセルをまとめる関数
+const toggleAttendance = () => {
+  if (isAttending.value) {
+    handleCancel();
+  } else {
+    handleAttend(); // 既存の参加処理を呼び出す
+  }
+};
+
+// 「参加する」ボタンのロジック
 const handleAttend = async () => {
   const user = auth.currentUser;
   if (!user) {
@@ -97,13 +143,24 @@ const handleAttend = async () => {
     return;
   }
   try {
-    // ここで既に参加済みかどうかのチェックを入れるとより親切になります（今後の課題）
-    await addDoc(collection(db, "attendances"), {
-      userId: user.uid,
-      eventId: eventId,
-      createdAt: serverTimestamp()
-    });
+    if (currentUserAttendance.value?.status === 'cancelled') {
+      // --- もし「キャンセル済み」の記録があれば、それを「参加中」に更新する ---
+      const attendanceDocRef = doc(db, 'attendances', currentUserAttendance.value.id);
+      await updateDoc(attendanceDocRef, { status: 'attending' });
+      
+    } else {
+      // --- そうでなければ（参加記録が全くない場合）、新しく作成する ---
+      await addDoc(collection(db, "attendances"), {
+        userId: user.uid,
+        eventId: eventId,
+        createdAt: serverTimestamp(),
+        status: 'attending'
+      });
+    }
+
+    await fetchEventDetails(); // ★ データ再取得
     alert('イベントへの参加登録が完了しました！');
+    // (参加後に参加者数を再取得して画面に反映するロジックなども、今後追加できます)
   } catch (error) {
     console.error("参加登録エラー: ", error);
     alert('エラーが発生しました。');
@@ -168,11 +225,14 @@ const openProfileModal = () => {
       <!-- <button v-if="isLoggedIn" @click="handleAttend" class="join-button">このイベントに参加する</button> -->
       <button 
         v-if="isLoggedIn" 
-        @click="handleAttend" 
+        @click="toggleAttendance" 
         class="join-button"
-        :disabled="isFull" 
+        :class="{ 'cancel-button': isAttending }"
+        :disabled="isFull && !isAttending" 
       >
-        {{ isFull ? '満員御礼' : 'このイベントに参加する' }}
+        <span v-if="isAttending">参加をキャンセルする</span>
+        <span v-else-if="isFull">満員御礼</span>
+        <span v-else>このイベントに参加する</span>
       </button>
 
       <RouterLink v-else to="/login" class="join-button">参加するにはログイン</RouterLink>
@@ -298,6 +358,13 @@ hr {
 
 .join-button:disabled:hover {
   background-color: #ccc; /* ホバーしても色が変わらないように */
+}
+
+.join-button.cancel-button {
+  background-color: #d9534f; /* キャンセルボタンは赤色に */
+}
+.join-button.cancel-button:hover {
+  background-color: #c9302c;
 }
 
 .loading-container {

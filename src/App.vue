@@ -78,7 +78,7 @@ const handleLogout = async () => {
   </header>
 
   <main :class="{ 'is-animating': isAnimating }">
-    <RouterView />
+  <RouterView />
   </main>
 </template>
 
