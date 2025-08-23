@@ -4,6 +4,7 @@ import { useRoute, RouterLink } from 'vue-router'; // ★ RouterLink をイン�
 import { db } from '../firebase';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import UserProfileModal from './UserProfileModal.vue';
 
 const route = useRoute();
 const event = ref(null);
@@ -15,6 +16,9 @@ const isLoading = ref(true);
 const organizer = ref(null);      // 主催者情報
 const attendees = ref([]);        // 参加者リスト
 const attendeeCount = ref(0);     // 参加者数
+
+//モーダルを制御するためのrefを追加
+const isModalVisible = ref(false);
 
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
@@ -96,6 +100,14 @@ const handleAttend = async () => {
     alert('エラーが発生しました。');
   }
 };
+
+//モーダルを開くための関数を追加
+const openProfileModal = () => {
+  if (organizer.value) { // 主催者情報がある場合のみ
+    isModalVisible.value = true;
+  }
+};
+
 </script>
 
 <template>
@@ -113,8 +125,8 @@ const handleAttend = async () => {
 
       <h1>{{ event.title }}</h1>
       
-      <!-- ★ 主催者情報 -->
-      <div v-if="organizer" class="organizer-info">
+      <!--主催者情報エリアにクリックイベントを追加 -->
+      <div v-if="organizer" class="organizer-info" @click="openProfileModal">
         <img :src="organizer.iconUrl || '/symbol-logo.png'" class="organizer-icon">
         <div>
           <span>主催者</span>
@@ -149,6 +161,13 @@ const handleAttend = async () => {
     </div>
   </div>
   <div v-else class="loading-container"><p>イベントが見つかりませんでした。</p></div>
+
+  <UserProfileModal 
+    :is-visible="isModalVisible" 
+    :user-id="organizer?.userId" 
+    @close="isModalVisible = false"
+  />
+
 </template>
 
 <style scoped>
@@ -280,6 +299,8 @@ hr {
   padding: 1rem;
   background-color: #f9f9f9;
   border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 .organizer-icon {
   width: 50px;
@@ -293,6 +314,10 @@ hr {
 }
 .organizer-info span { font-size: 0.8rem; color: #777; }
 .organizer-info strong { font-size: 1.1rem; }
+
+.organizer-info:hover {
+  background-color: #f0f0f0;
+}
 
 .attendees-section {
   margin-top: 2.5rem;
@@ -315,4 +340,6 @@ hr {
   object-fit: cover;
   border: 2px solid #ddd;
 }
+
+
 </style>
