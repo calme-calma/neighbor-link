@@ -18,7 +18,8 @@ const eventData = ref({
   location: '',
   category: '',
   price: '', // ★ 参加費フィールドを追加
-  tags: []    // ★ 雰囲気タグ（複数選択なので配列）を追加
+  tags: [],    // ★ 雰囲気タグ（複数選択なので配列）を追加
+  capacity: null // ★ 定員フィールドを追加 (初期値はnull)
 });
 
 // ★ 雰囲気タグの選択肢リストを定義
@@ -167,6 +168,19 @@ onMounted(async () => {
       <div class="form-group">
         <label for="price">参加費（例: 500円, 無料, 飲食代実費など）</label>
         <input type="text" id="price" v-model="eventData.price" placeholder="無料の場合は「無料」と入力してください">
+      </div>
+      
+      <!-- 定員 -->
+      <div class="form-group">
+        <label for="capacity">定員（1名以上）</label>
+        <input 
+          type="number" 
+          id="capacity" 
+          v-model.number="eventData.capacity" 
+          min="1"
+          placeholder="半角数字で入力"
+          required
+        >
       </div>
       
       <!-- 雰囲気タグ -->

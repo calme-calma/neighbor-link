@@ -40,6 +40,15 @@ const formattedDate = computed(() => {
   });
 });
 
+const isFull = computed(() => {
+  // 定員が設定されていない、または0の場合は満員としない
+  if (!event.value || !event.value.capacity || event.value.capacity <= 0) {
+    return false;
+  }
+  // 現在の参加者数が定員以上であればtrue (満員) を返す
+  return attendeeCount.value >= event.value.capacity;
+});
+
 // --- ★ データ取得ロジックを大幅に強化 ---
 onMounted(async () => {
   try {
@@ -156,7 +165,16 @@ const openProfileModal = () => {
     </div>
 
     <div class="floating-footer">
-      <button v-if="isLoggedIn" @click="handleAttend" class="join-button">このイベントに参加する</button>
+      <!-- <button v-if="isLoggedIn" @click="handleAttend" class="join-button">このイベントに参加する</button> -->
+      <button 
+        v-if="isLoggedIn" 
+        @click="handleAttend" 
+        class="join-button"
+        :disabled="isFull" 
+      >
+        {{ isFull ? '満員御礼' : 'このイベントに参加する' }}
+      </button>
+
       <RouterLink v-else to="/login" class="join-button">参加するにはログイン</RouterLink>
     </div>
   </div>
@@ -270,6 +288,16 @@ hr {
 .join-button:hover {
   background-color: #ec971f;
   transform: scale(1.02);
+}
+
+.join-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none; /* ホバーエフェクトも無効化 */
+}
+
+.join-button:disabled:hover {
+  background-color: #ccc; /* ホバーしても色が変わらないように */
 }
 
 .loading-container {
